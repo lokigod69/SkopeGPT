@@ -62,6 +62,11 @@ export class GoalAppDB extends Dexie {
   sync_events!: EntityTable<SyncEvent, 'id'>;
   preferences!: EntityTable<LocalPreferences, 'id'>;
 
+  // Alias for backward compatibility
+  get syncQueue(): EntityTable<SyncEvent, 'id'> {
+    return this.sync_events;
+  }
+
   constructor() {
     super('GoalAppDB');
 
