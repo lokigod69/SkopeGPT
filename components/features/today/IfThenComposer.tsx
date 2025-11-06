@@ -75,7 +75,7 @@ export function IfThenComposer({
     }
   };
 
-  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'cue');
+  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'start');
 
   return (
     <Card className="border-border bg-card">

@@ -50,7 +50,7 @@ export function TodayCard({
     onSkipComplete(reason, notes);
   };
 
-  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'prompt');
+  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'start');
 
   return (
     <>

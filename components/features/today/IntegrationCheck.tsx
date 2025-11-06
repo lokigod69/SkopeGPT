@@ -43,7 +43,7 @@ export function IntegrationCheck({
   seedDescription,
   onResponse,
 }: IntegrationCheckProps) {
-  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'integration');
+  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'integrationCheck');
 
   return (
     <Card className="border-primary/50 bg-gradient-to-b from-primary/5 to-transparent">

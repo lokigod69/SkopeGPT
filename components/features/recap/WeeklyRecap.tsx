@@ -33,7 +33,7 @@ interface WeeklyRecapProps {
 }
 
 export function WeeklyRecap({ data, coachPreset, onClose }: WeeklyRecapProps) {
-  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'celebrate');
+  const coachCopy = CoachSystem.getCoachCopy(coachPreset, 'recap');
 
   // Calculate trend direction
   const trendSlope = calculateTrendSlope(data.trendData);
