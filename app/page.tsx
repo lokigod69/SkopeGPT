@@ -3,9 +3,14 @@
  * This is the main entry point for the Goal App
  */
 
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { FirstRunRedirect } from '@/components/system/FirstRunRedirect';
+
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 texture-grain">
+      <FirstRunRedirect />
       <div className="max-w-md w-full space-y-8 animate-prompt">
         {/* Logo / Header */}
         <div className="text-center space-y-2">
@@ -44,12 +49,11 @@ export default function Home() {
           </div>
 
           <div className="pt-4">
-            <button
-              className="w-full bg-primary text-primary-foreground font-medium py-3 px-4 rounded-md hover:opacity-90 transition-opacity"
-              disabled
-            >
-              Ready for Phase 1
-            </button>
+            <Button asChild size="lg" className="w-full">
+              <Link href="/onboarding" prefetch>
+                Ready for Phase 1
+              </Link>
+            </Button>
           </div>
         </div>
 

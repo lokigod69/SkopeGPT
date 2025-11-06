@@ -37,7 +37,10 @@ export default function OnboardingPage() {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Complete onboarding - redirect to home
+      // Complete onboarding - set flag and redirect to home
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboarding_done', '1');
+      }
       router.push('/');
     }
   };
