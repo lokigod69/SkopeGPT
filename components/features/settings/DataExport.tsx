@@ -24,7 +24,7 @@ export function DataExport() {
       const [goals, seeds, logs] = await Promise.all([
         db.goals.toArray(),
         db.seeds.toArray(),
-        db.dailyLogs.toArray(),
+        db.daily_logs.toArray(),
       ]);
 
       const data = {

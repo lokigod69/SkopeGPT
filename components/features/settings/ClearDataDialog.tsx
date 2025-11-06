@@ -78,10 +78,10 @@ export function ClearDataDialog({ isOpen, onClose, onConfirm }: ClearDataDialogP
 
     try {
       // Clear IndexedDB
-      await db.transaction('rw', [db.goals, db.seeds, db.dailyLogs, db.syncQueue], async () => {
+      await db.transaction('rw', [db.goals, db.seeds, db.daily_logs, db.syncQueue], async () => {
         await db.goals.clear();
         await db.seeds.clear();
-        await db.dailyLogs.clear();
+        await db.daily_logs.clear();
         await db.syncQueue.clear();
       });
 
