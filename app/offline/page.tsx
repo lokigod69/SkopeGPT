@@ -3,6 +3,8 @@
  * Shown when user is offline and page is not cached
  */
 
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function OfflinePage() {

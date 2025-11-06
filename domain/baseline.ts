@@ -50,14 +50,14 @@ export function createBaselinePromotion(
 
   const messages = {
     automatic: [
-      `${seed.step_description} is now part of your routine! 🎉`,
-      `You've automated ${seed.step_description} - it's baseline now.`,
-      `${seed.step_description} has become second nature. Well done!`,
+      `${seed.description} is now part of your routine! 🎉`,
+      `You've automated ${seed.description} - it's baseline now.`,
+      `${seed.description} has become second nature. Well done!`,
     ],
     user_confirmed: [
-      `Great! ${seed.step_description} is now your baseline.`,
-      `Locked in: ${seed.step_description} is automatic.`,
-      `${seed.step_description} - you've made it stick!`,
+      `Great! ${seed.description} is now your baseline.`,
+      `Locked in: ${seed.description} is automatic.`,
+      `${seed.description} - you've made it stick!`,
     ],
   };
 
@@ -76,7 +76,7 @@ export function createBaselinePromotion(
 
   return {
     seedId: seed.id,
-    seedDescription: seed.step_description,
+    seedDescription: seed.description,
     trigger,
     rollingSuccess,
     message,
@@ -119,12 +119,14 @@ export function getPostBaselineAction(
 
 /**
  * Update seed status to baseline
+ * Note: Seeds don't have a status field in the schema.
+ * In practice, baseline promotion would deactivate the seed (active: false)
+ * and potentially update the parent Goal's status.
  */
 export function promoteToBaseline(seed: Seed): Partial<Seed> {
   return {
     id: seed.id,
-    status: 'baseline',
-    baseline_since: new Date().toISOString().split('T')[0],
+    active: false, // Mark seed as no longer active since it's baseline
   };
 }
 
@@ -145,8 +147,8 @@ export function findBaselineCandidates(
   const candidates: BaselinePromotion[] = [];
 
   for (const seed of seeds) {
-    // Skip seeds already at baseline
-    if (seed.status === 'baseline') continue;
+    // Skip inactive seeds (already at baseline or paused)
+    if (!seed.active) continue;
 
     const logData = logs.get(seed.id);
     if (!logData) continue;

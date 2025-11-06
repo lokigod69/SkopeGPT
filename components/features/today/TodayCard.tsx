@@ -57,7 +57,7 @@ export function TodayCard({
       <Card className="border-border bg-card">
         <CardHeader>
           <CardDescription className="text-xs uppercase tracking-wide text-muted-foreground">
-            {goal.horizon}
+            {goal.title}
           </CardDescription>
           <CardTitle className="text-xl font-semibold">
             {coachCopy}
@@ -66,34 +66,17 @@ export function TodayCard({
         <CardContent className="space-y-6">
           {/* The Seed - Main Action */}
           <div className="p-4 rounded-lg bg-primary/5 border-l-4 border-primary">
-            <p className="text-base font-medium">{seed.step_description}</p>
-            {seed.if_then_cue && (
+            <p className="text-base font-medium">{seed.description}</p>
+            {seed.if_window && (
               <p className="text-sm text-muted-foreground mt-2">
-                <span className="font-semibold">When:</span> {seed.if_then_cue}
+                <span className="font-semibold">When:</span> {seed.if_window}
               </p>
             )}
-            {seed.window_start && seed.window_end && (
+            {seed.if_context && (
               <p className="text-xs text-muted-foreground mt-1">
-                Best time: {seed.window_start} - {seed.window_end}
+                Where: {seed.if_context}
               </p>
             )}
-          </div>
-
-          {/* Energy Budget Reminder */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4].map((level) => (
-                <div
-                  key={level}
-                  className={`w-2 h-6 rounded-sm ${
-                    level <= getEnergyLevel(seed.energy_budget)
-                      ? 'bg-electric-teal'
-                      : 'bg-muted'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="capitalize">{seed.energy_budget} energy</span>
           </div>
 
           {/* CTAs - The three critical buttons */}
@@ -125,18 +108,6 @@ export function TodayCard({
               <span className="text-xs font-semibold">Skip</span>
             </Button>
           </div>
-
-          {/* Quick Stats */}
-          {seed.rolling_success !== null && seed.rolling_success !== undefined && (
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">14-day success</span>
-                <span className="font-semibold text-primary">
-                  {Math.round(seed.rolling_success * 100)}%
-                </span>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -150,15 +121,4 @@ export function TodayCard({
       )}
     </>
   );
-}
-
-// Helper to convert energy budget to visual level
-function getEnergyLevel(budget: string): number {
-  const levels: Record<string, number> = {
-    tiny: 1,
-    small: 2,
-    medium: 3,
-    big: 4,
-  };
-  return levels[budget] || 2;
 }

@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "build:ci": "next build",
+    "prepush": "pnpm typecheck && pnpm lint && pnpm build:ci"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

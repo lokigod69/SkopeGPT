@@ -83,7 +83,7 @@ function generateStepSizeTweak(
   seed: Seed,
   pattern: FrictionPattern
 ): TweakSuggestion {
-  const description = seed.step_description.toLowerCase();
+  const description = seed.description.toLowerCase();
 
   // Try to extract and reduce numbers
   const timeMatch = description.match(/(\d+)\s*(minute|min|second|sec)/i);
@@ -127,7 +127,7 @@ function generateStepSizeTweak(
     type: 'step_size',
     title: 'Simplify the step',
     description: 'Make it even smaller',
-    currentValue: seed.step_description,
+    currentValue: seed.description,
     suggestedValue: 'A simpler version',
     rationale: 'This step feels too big. What\'s the tiniest version you could do?',
     confidence: 'low',
@@ -142,9 +142,7 @@ function generateTimingTweak(
   seed: Seed,
   pattern: FrictionPattern
 ): TweakSuggestion {
-  const currentWindow = seed.window_start && seed.window_end
-    ? `${seed.window_start} - ${seed.window_end}`
-    : 'Not set';
+  const currentWindow = seed.if_window || 'Not set';
 
   // Suggest common alternative windows
   const timingSuggestions = [
@@ -197,7 +195,7 @@ function generateCueTweak(
   seed: Seed,
   pattern: FrictionPattern
 ): TweakSuggestion {
-  const currentCue = seed.if_then_cue || 'No cue set';
+  const currentCue = seed.if_context || seed.if_window || 'No cue set';
 
   const cueSuggestions = [
     {
@@ -242,41 +240,27 @@ export function applyTweak(
   switch (tweak.type) {
     case 'step_size':
       return {
-        step_description: seed.step_description.replace(
+        description: seed.description.replace(
           tweak.currentValue,
           tweak.suggestedValue
         ),
       };
 
     case 'timing':
-      // Extract hours from suggested window (e.g., "6-9 AM" -> "06:00" and "09:00")
-      const match = tweak.suggestedValue.match(/(\d+)-(\d+)\s*(AM|PM)/i);
-      if (match) {
-        let startHour = parseInt(match[1], 10);
-        let endHour = parseInt(match[2], 10);
-        const meridiem = match[3].toUpperCase();
-
-        if (meridiem === 'PM' && startHour !== 12) {
-          startHour += 12;
-          endHour += 12;
-        }
-
-        return {
-          window_start: `${String(startHour).padStart(2, '0')}:00`,
-          window_end: `${String(endHour).padStart(2, '0')}:00`,
-        };
-      }
-      return {};
+      // Update if_window with the suggested value
+      return {
+        if_window: tweak.suggestedValue,
+      };
 
     case 'cue':
       return {
-        if_then_cue: tweak.suggestedValue,
+        if_context: tweak.suggestedValue,
       };
 
     case 'energy_alignment':
       // Add to notes or description
       return {
-        step_description: `${tweak.suggestedValue}, then ${seed.step_description}`,
+        description: `${tweak.suggestedValue}, then ${seed.description}`,
       };
 
     default:

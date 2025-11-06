@@ -51,8 +51,8 @@ export function DataExport() {
 
           return {
             date: log.date,
-            horizon: goal?.horizon || '',
-            step: seed?.step_description || '',
+            goal: goal?.title || '',
+            step: seed?.description || '',
             outcome: log.outcome,
             skip_reason: log.skip_reason || '',
             energy_after: log.energy_after || '',
@@ -60,12 +60,12 @@ export function DataExport() {
           };
         });
 
-        const headers = 'Date,Horizon,Step,Outcome,Skip Reason,Energy After,Notes\n';
+        const headers = 'Date,Goal,Step,Outcome,Skip Reason,Energy After,Notes\n';
         const csvRows = rows
           .map((row) =>
             [
               row.date,
-              escapeCSV(row.horizon),
+              escapeCSV(row.goal),
               escapeCSV(row.step),
               row.outcome,
               row.skip_reason,

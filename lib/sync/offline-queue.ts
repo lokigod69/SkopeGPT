@@ -4,42 +4,43 @@
  * Works with IndexedDB and service worker
  */
 
-import { db } from '@/lib/db/dexie';
-
-export interface QueuedOperation {
-  id: string;
-  type: 'LOG_DONE' | 'LOG_SKIP' | 'UPDATE_SEED' | 'CREATE_GOAL';
-  payload: any;
-  timestamp: number;
-  retries: number;
-  lastError?: string;
-}
+import * as React from 'react';
+import { db, type SyncEvent } from '@/lib/db/dexie';
 
 const MAX_RETRIES = 3;
+
+// Map QueuedOperation type names to SyncEvent type names
+const TYPE_MAP: Record<string, SyncEvent['type']> = {
+  'LOG_DONE': 'log_done',
+  'LOG_SKIP': 'log_skip',
+  'UPDATE_SEED': 'update_seed',
+  'CREATE_GOAL': 'create_goal',
+};
 
 /**
  * Add operation to offline queue
  */
 export async function queueOperation(
-  type: QueuedOperation['type'],
-  payload: any
-): Promise<string> {
-  const operation: QueuedOperation = {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    type,
+  type: keyof typeof TYPE_MAP,
+  payload: any,
+  entityId: string = ''
+): Promise<number> {
+  const event: Omit<SyncEvent, 'id'> = {
+    type: TYPE_MAP[type] || 'log_done',
+    entity_id: entityId,
     payload,
-    timestamp: Date.now(),
-    retries: 0,
+    created_at: new Date(),
+    synced: false,
   };
 
-  await db.syncQueue.add(operation);
+  const id = await db.syncQueue.add(event as any);
 
   // Try immediate sync if online
-  if (navigator.onLine) {
+  if (typeof window !== 'undefined' && navigator.onLine) {
     syncQueue().catch(console.error);
   }
 
-  return operation.id;
+  return id ?? 0;
 }
 
 /**
@@ -59,27 +60,18 @@ export async function syncQueue(): Promise<{
   let synced = 0;
   let failed = 0;
 
-  for (const operation of operations) {
+  for (const event of operations) {
+    // Skip already synced events
+    if (event.synced) continue;
+
     try {
-      await executeOperation(operation);
-      await db.syncQueue.delete(operation.id);
+      await executeOperation(event);
+      // Mark as synced
+      await db.syncQueue.update(event.id!, { synced: true });
       synced++;
     } catch (error) {
-      const updatedOp = {
-        ...operation,
-        retries: operation.retries + 1,
-        lastError: error instanceof Error ? error.message : 'Unknown error',
-      };
-
-      if (updatedOp.retries >= MAX_RETRIES) {
-        // Move to failed operations or delete
-        await db.syncQueue.delete(operation.id);
-        failed++;
-        console.error('[Sync] Max retries reached for operation:', operation);
-      } else {
-        // Update with retry count
-        await db.syncQueue.put(updatedOp);
-      }
+      failed++;
+      console.error('[Sync] Sync failed for event:', event, error);
     }
   }
 
@@ -91,48 +83,48 @@ export async function syncQueue(): Promise<{
 /**
  * Execute a queued operation
  */
-async function executeOperation(operation: QueuedOperation): Promise<void> {
+async function executeOperation(event: SyncEvent): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-  switch (operation.type) {
-    case 'LOG_DONE':
+  switch (event.type) {
+    case 'log_done':
       await fetch(`${baseUrl}/api/trpc/daily.logDone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(operation.payload),
+        body: JSON.stringify(event.payload),
       }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       });
       break;
 
-    case 'LOG_SKIP':
+    case 'log_skip':
       await fetch(`${baseUrl}/api/trpc/daily.logSkip`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(operation.payload),
+        body: JSON.stringify(event.payload),
       }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       });
       break;
 
-    case 'UPDATE_SEED':
+    case 'update_seed':
       await fetch(`${baseUrl}/api/trpc/seeds.update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(operation.payload),
+        body: JSON.stringify(event.payload),
       }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       });
       break;
 
-    case 'CREATE_GOAL':
+    case 'create_goal':
       await fetch(`${baseUrl}/api/trpc/goals.create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(operation.payload),
+        body: JSON.stringify(event.payload),
       }).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -140,7 +132,7 @@ async function executeOperation(operation: QueuedOperation): Promise<void> {
       break;
 
     default:
-      throw new Error(`Unknown operation type: ${operation.type}`);
+      throw new Error(`Unknown event type: ${event.type}`);
   }
 }
 
@@ -150,14 +142,14 @@ async function executeOperation(operation: QueuedOperation): Promise<void> {
 export async function getQueueStatus(): Promise<{
   count: number;
   oldestTimestamp?: number;
-  operations: QueuedOperation[];
+  events: SyncEvent[];
 }> {
-  const operations = await db.syncQueue.orderBy('timestamp').toArray();
+  const events = await db.syncQueue.orderBy('created_at').toArray();
 
   return {
-    count: operations.length,
-    oldestTimestamp: operations[0]?.timestamp,
-    operations,
+    count: events.length,
+    oldestTimestamp: events[0]?.created_at.getTime(),
+    events,
   };
 }
 
@@ -193,7 +185,7 @@ export function setupSyncListeners() {
 
   // Periodic sync every 5 minutes if online
   setInterval(() => {
-    if (navigator.onLine) {
+    if (typeof window !== 'undefined' && navigator.onLine) {
       syncQueue().catch(console.error);
     }
   }, 5 * 60 * 1000);
@@ -240,6 +232,3 @@ export function useSyncStatus() {
     sync: syncQueue,
   };
 }
-
-// Fix: Add React import for the hook
-import * as React from 'react';

@@ -62,9 +62,17 @@ export class GoalAppDB extends Dexie {
   sync_events!: EntityTable<SyncEvent, 'id'>;
   preferences!: EntityTable<LocalPreferences, 'id'>;
 
-  // Alias for backward compatibility
+  // Aliases for backward compatibility (camelCase → snake_case)
+  get dailyLogs(): EntityTable<LocalDailyLog, 'id'> {
+    return this.daily_logs;
+  }
+
   get syncQueue(): EntityTable<SyncEvent, 'id'> {
     return this.sync_events;
+  }
+
+  get integrationStates(): EntityTable<LocalIntegrationState, 'seed_id'> {
+    return this.integration_states;
   }
 
   constructor() {

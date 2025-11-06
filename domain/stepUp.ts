@@ -33,7 +33,7 @@ export function generateStepUp(
   energyBudget: EnergyBudget,
   increasePercentage: number = 15
 ): StepUpSuggestion {
-  const description = seed.step_description.toLowerCase();
+  const description = seed.description.toLowerCase();
 
   // Time-based seeds (e.g., "5 minutes", "2 minutes")
   const timeMatch = description.match(/(\d+)\s*(minute|min|second|sec)/i);
@@ -43,8 +43,8 @@ export function generateStepUp(
     const newTime = Math.ceil(currentTime * (1 + increasePercentage / 100));
 
     return {
-      originalDescription: seed.step_description,
-      newDescription: seed.step_description.replace(
+      originalDescription: seed.description,
+      newDescription: seed.description.replace(
         timeMatch[0],
         `${newTime} ${unit}${newTime > 1 ? 's' : ''}`
       ),
@@ -62,8 +62,8 @@ export function generateStepUp(
     const newCount = Math.ceil(currentCount * (1 + increasePercentage / 100));
 
     return {
-      originalDescription: seed.step_description,
-      newDescription: seed.step_description.replace(
+      originalDescription: seed.description,
+      newDescription: seed.description.replace(
         countMatch[0],
         `${newCount} ${item}`
       ),
@@ -96,8 +96,8 @@ export function generateStepUp(
   for (const [current, next] of Object.entries(intensityUpgrades)) {
     if (description.includes(current)) {
       return {
-        originalDescription: seed.step_description,
-        newDescription: seed.step_description.replace(current, next),
+        originalDescription: seed.description,
+        newDescription: seed.description.replace(current, next),
         increaseType: 'intensity',
         increaseAmount: increasePercentage,
         rationale: `Great progress! Try upgrading to ${next}.`,
@@ -107,8 +107,8 @@ export function generateStepUp(
 
   // Default: suggest custom increase
   return {
-    originalDescription: seed.step_description,
-    newDescription: seed.step_description,
+    originalDescription: seed.description,
+    newDescription: seed.description,
     increaseType: 'custom',
     increaseAmount: increasePercentage,
     rationale: `You're ready for the next level. Think of a slightly harder version.`,
