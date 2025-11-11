@@ -6,9 +6,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { OnboardingCard } from './OnboardingCard';
+import { useOnboarding } from '@/domain/onboarding.store';
 
 const SUGGESTED_HORIZONS = [
   'Sleep',
@@ -22,71 +23,37 @@ const SUGGESTED_HORIZONS = [
 ];
 
 interface HorizonStepProps {
-  value: string;
-  onChange: (value: string) => void;
   onNext: () => void;
 }
 
-export function HorizonStep({ value, onChange, onNext }: HorizonStepProps) {
-  const [customValue, setCustomValue] = useState(value);
+export function HorizonStep({ onNext }: HorizonStepProps) {
+  const horizon = useOnboarding((s) => s.horizon);
+  const setHorizon = useOnboarding((s) => s.setHorizon);
+
+  const [customValue, setCustomValue] = useState(horizon);
   const [isCustom, setIsCustom] = useState(
-    value && !SUGGESTED_HORIZONS.includes(value)
+    horizon && !SUGGESTED_HORIZONS.includes(horizon)
   );
 
-  const handleChipClick = (horizon: string) => {
+  const handleChipClick = (selectedHorizon: string) => {
     setIsCustom(false);
-    setCustomValue(horizon);
-    onChange(horizon);
+    setCustomValue(selectedHorizon);
+    setHorizon(selectedHorizon);
   };
 
   const handleCustomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setCustomValue(newValue);
-    onChange(newValue);
+    setHorizon(newValue);
   };
 
-  const canProceed = value.trim().length > 0;
+  const canProceed = horizon.trim().length > 0;
 
   return (
-    <Card className="border-border bg-card">
-      <CardHeader>
-        <CardTitle className="text-2xl">What's one horizon you care about?</CardTitle>
-        <CardDescription>
-          Pick a single area to focus on this month
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Smart suggestions as chips */}
-        <div className="flex flex-wrap gap-2">
-          {SUGGESTED_HORIZONS.map(horizon => (
-            <button
-              key={horizon}
-              onClick={() => handleChipClick(horizon)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                value === horizon
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              {horizon}
-            </button>
-          ))}
-        </div>
-
-        {/* Custom input */}
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Or enter your own:</p>
-          <Input
-            type="text"
-            placeholder="e.g., Cooking, Meditation, Music..."
-            value={isCustom ? customValue : ''}
-            onChange={handleCustomChange}
-            onFocus={() => setIsCustom(true)}
-            className="w-full"
-          />
-        </div>
-
-        {/* Next button */}
+    <OnboardingCard
+      title="What's one horizon you care about?"
+      description="Pick a single area to focus on this month"
+      footer={
         <Button
           onClick={onNext}
           disabled={!canProceed}
@@ -95,7 +62,37 @@ export function HorizonStep({ value, onChange, onNext }: HorizonStepProps) {
         >
           Continue
         </Button>
-      </CardContent>
-    </Card>
+      }
+    >
+      {/* Smart suggestions as chips */}
+      <div className="flex flex-wrap gap-2">
+        {SUGGESTED_HORIZONS.map(h => (
+          <button
+            key={h}
+            onClick={() => handleChipClick(h)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              horizon === h
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+            }`}
+          >
+            {h}
+          </button>
+        ))}
+      </div>
+
+      {/* Custom input */}
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">Or enter your own:</p>
+        <Input
+          type="text"
+          placeholder="e.g., Cooking, Meditation, Music..."
+          value={isCustom ? customValue : ''}
+          onChange={handleCustomChange}
+          onFocus={() => setIsCustom(true)}
+          className="w-full"
+        />
+      </div>
+    </OnboardingCard>
   );
 }

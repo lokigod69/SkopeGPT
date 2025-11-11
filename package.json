@@ -9,7 +9,10 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "build:ci": "next build",
-    "prepush": "pnpm typecheck && pnpm lint && pnpm build:ci"
+    "prepush": "pnpm typecheck && pnpm lint && pnpm build:ci",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

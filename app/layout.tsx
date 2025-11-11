@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning data-font-size="medium">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans min-h-dvh bg-slate-950 text-slate-100 antialiased`}>
         {/* Skip to main content link for screen readers */}
         <a href="#main-content" className="skip-link">
           Skip to main content
@@ -44,7 +44,7 @@ export default function RootLayout({
 
         <ClientInit />
         <TRPCProvider>
-          <main id="main-content">
+          <main id="main-content" className="mx-auto w-full max-w-[720px] px-4 sm:px-6 pb-[env(safe-area-inset-bottom)]">
             {children}
           </main>
         </TRPCProvider>

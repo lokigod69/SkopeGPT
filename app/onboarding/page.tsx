@@ -16,32 +16,40 @@ import { HorizonStep } from '@/components/features/onboarding/HorizonStep';
 import { EnergyStep } from '@/components/features/onboarding/EnergyStep';
 import { CoachStep } from '@/components/features/onboarding/CoachStep';
 import { SoilSeedStep } from '@/components/features/onboarding/SoilSeedStep';
-import type { CoachPreset, EnergyBudget } from '@/lib/schemas';
+import { useOnboarding } from '@/domain/onboarding.store';
+import { completeOnboarding } from '@/domain/onboarding.actions';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [onboardingData, setOnboardingData] = useState({
-    horizon: '',
-    energyBudget: 'small' as EnergyBudget,
-    coachPreset: 'compassionate' as CoachPreset,
-    soilRating: 3,
-    selectedSeed: '',
-  });
+  const reset = useOnboarding((s) => s.reset);
 
-  const updateData = (data: Partial<typeof onboardingData>) => {
-    setOnboardingData(prev => ({ ...prev, ...data }));
-  };
-
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Complete onboarding - set flag and redirect to home
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('onboarding_done', '1');
+      // Complete onboarding - create goal, seed, and integration state
+      const state = useOnboarding.getState();
+
+      try {
+        await completeOnboarding({
+          horizon: state.horizon,
+          energy: state.energy,
+          coachPreset: state.coachPreset,
+          seedDescription: state.selectedSeed,
+          // seedMinutes will be parsed from description
+        });
+
+        // Set flag and redirect to /today
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('onboarding_done', '1');
+        }
+        reset(); // Clear store for next time
+        router.push('/today');
+      } catch (error) {
+        console.error('Failed to complete onboarding:', error);
+        // TODO: Show error toast to user
       }
-      router.push('/');
     }
   };
 
@@ -73,17 +81,11 @@ export default function OnboardingPage() {
         {/* Step content */}
         <div className="animate-slide-up">
           {currentStep === 1 && (
-            <HorizonStep
-              value={onboardingData.horizon}
-              onChange={horizon => updateData({ horizon })}
-              onNext={nextStep}
-            />
+            <HorizonStep onNext={nextStep} />
           )}
 
           {currentStep === 2 && (
             <EnergyStep
-              value={onboardingData.energyBudget}
-              onChange={energyBudget => updateData({ energyBudget })}
               onNext={nextStep}
               onBack={prevStep}
             />
@@ -91,8 +93,6 @@ export default function OnboardingPage() {
 
           {currentStep === 3 && (
             <CoachStep
-              value={onboardingData.coachPreset}
-              onChange={coachPreset => updateData({ coachPreset })}
               onNext={nextStep}
               onBack={prevStep}
             />
@@ -100,13 +100,6 @@ export default function OnboardingPage() {
 
           {currentStep === 4 && (
             <SoilSeedStep
-              horizon={onboardingData.horizon}
-              energyBudget={onboardingData.energyBudget}
-              coachPreset={onboardingData.coachPreset}
-              soilRating={onboardingData.soilRating}
-              onSoilRatingChange={soilRating => updateData({ soilRating })}
-              selectedSeed={onboardingData.selectedSeed}
-              onSeedSelect={selectedSeed => updateData({ selectedSeed })}
               onComplete={nextStep}
               onBack={prevStep}
             />
